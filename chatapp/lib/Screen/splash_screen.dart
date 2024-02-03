@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Center(
         child: Text(
-          "Добро пожаловать в\nДруг Рядом",
+          "Добро пожаловать в Друг Рядом",
           style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
         ),
       ),
