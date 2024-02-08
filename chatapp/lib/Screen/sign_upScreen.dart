@@ -4,6 +4,7 @@ import 'package:chatapp/auth/firebase_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../message.dart';
 
 import 'home_screen.dart';
 
@@ -21,6 +22,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
+
+  bool _isSigningUp = false;
 
   @override
   void dispose(){
@@ -71,26 +74,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               FormContainer(
                 controller: _passwordController,
-                hintText: "Пароль",
+                hintText: "Пароль (от 6 символов)",
                 isPasswordField: true,
               ),
               SizedBox(
                 height: 30,
               ),
               GestureDetector(
-                onTap: () {
-                  _signUp();
-                  Navigator.pushAndRemoveUntil(context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),(route) => false);
-                },
+                onTap: _signUp,
                 child: Container(
                   width: 250,
                   height: 45,
                   decoration: BoxDecoration(
                       color: Colors.blueAccent,
                       borderRadius: BorderRadius.circular(10)),
-                  child: Center(
-                      child: Text("Зарегистрироваться",
+                  child:  Center(
+                      child: _isSigningUp ? CircularProgressIndicator(color: Colors.white) : Text("Зарегистрироваться",
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -127,16 +126,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _signUp() async{
+
+    setState(() {
+      _isSigningUp = true;
+    });
+
     String username = _usernameController.text;
     String email = _emailController.text;
     String password = _passwordController.text;
 
     User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
+    setState(() {
+      _isSigningUp = false;
+    });
+
     if(user != null){
+      showToast(message: "Пользователь создан");
       print("User is successfullu created");
-      Navigator.pushNamed(context, "/name");
+      Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
     }else{
+      showToast(message: "Ошибка");
       print("Some error happend");
     }
   }
