@@ -1,13 +1,18 @@
+import 'package:chatapp/api/apis.dart';
 import 'package:chatapp/message.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseAuthService{
 
-  FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth _auth = APIs.auth;
 
-  Future<User?> signUpWithEmailAndPassword(String email, String password) async {
+  Future<User?> signUpWithEmailAndPassword(String email, String password, String name) async {
 
     try{
+      var userExists = await APIs.firestore.collection('users').where("name", isEqualTo: name).get();
+      if (userExists.docs.isNotEmpty) {
+        throw Exception("Пользователь с таким именем уже есть");
+      }
       UserCredential credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       return credential.user;
     }on FirebaseAuthException catch(e){
@@ -24,8 +29,11 @@ class FirebaseAuthService{
       else{
         print("====="+e.code);
         showToast(message: "Ошибка: ${e.code}");
-        print("Some error occured");
+        print("Ошибка");
       }
+    } on Exception catch (e) {
+      showToast(message: "Ошибка: ${e.toString().replaceAll("Exception: ", "")}");
+      print("$e");
     }
     return null;
   }

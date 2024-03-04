@@ -1,5 +1,6 @@
 import 'package:chatapp/Screen/sign_upScreen.dart';
 import 'package:chatapp/Widgets/form_container.dart';
+import 'package:chatapp/api/apis.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -138,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
       print("User is successfully signedIn");
       showToast(message: "Вы вошли в аккаунт");
       Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
+      APIs.getMe();
     }else{
       showToast(message: "Ошибка");
       print("Some error happend");

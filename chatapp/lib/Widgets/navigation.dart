@@ -29,9 +29,18 @@ Widget buildHeader(BuildContext context) => Container(
 Widget buildMenuItems(BuildContext context) => Column(
       children: [
         ListTile(
-          leading: const Icon(Icons.home_outlined),
-          title: const Text('Home'),
-          onTap: () {},
+          leading: const Icon(Icons.chat),
+          title: const Text('Чаты'),
+          onTap: () {
+            Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.person),
+          title: const Text('Профиль'),
+          onTap: () {
+            Navigator.pushNamedAndRemoveUntil(context, "/user",(route) => false);
+          },
         ),
         const Divider(
           color: Colors.black,

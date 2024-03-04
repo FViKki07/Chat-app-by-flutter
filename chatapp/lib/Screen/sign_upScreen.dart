@@ -1,5 +1,6 @@
 import 'package:chatapp/Screen/login_screen.dart';
 import 'package:chatapp/Widgets/form_container.dart';
+import 'package:chatapp/api/apis.dart';
 import 'package:chatapp/auth/firebase_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -135,16 +136,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String email = _emailController.text;
     String password = _passwordController.text;
 
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
+    User? user = await _auth.signUpWithEmailAndPassword(email, password, username);
 
     setState(() {
       _isSigningUp = false;
     });
 
     if(user != null){
-      showToast(message: "Пользователь создан");
-      print("User is successfullu created");
-      Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
+
+      if(await APIs.userExists()){
+        showToast(message: "Пользователь создан");
+        print("User is successfullu created");
+        Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
+      }else{
+        await APIs.createUser(_usernameController.text).then((value){
+          showToast(message: "Пользователь создан");
+          print("----------User is successfullu edited to users");
+          Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
+        });
+      }
     }else{
       showToast(message: "Ошибка");
       print("Some error happend");
