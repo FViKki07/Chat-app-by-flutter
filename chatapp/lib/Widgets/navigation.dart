@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../message.dart';
+import '../helper/message.dart';
 class NavigationDrawerWidget extends StatelessWidget {
   const NavigationDrawerWidget({Key? key}) : super(key: key);
 
@@ -39,7 +39,8 @@ Widget buildMenuItems(BuildContext context) => Column(
           leading: const Icon(Icons.person),
           title: const Text('Профиль'),
           onTap: () {
-            Navigator.pushNamedAndRemoveUntil(context, "/user",(route) => false);
+            Navigator.pop(context);
+            Navigator.pushNamed(context, "/user");
           },
         ),
         const Divider(

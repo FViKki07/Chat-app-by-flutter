@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatapp/api/apis.dart';
 import 'package:flutter/cupertino.dart';
@@ -7,12 +9,12 @@ import 'package:image_picker/image_picker.dart';
 import '../Models/chatuser.dart';
 import '../Widgets/navigation.dart';
 import '../main.dart';
-import '../message.dart';
+import '../helper/message.dart';
 
 class ProfileScreen extends StatefulWidget {
-  //final ChatUser user;
+//
 
-  const ProfileScreen({super.key}); //required this.user
+  const ProfileScreen({super.key}); //,required this.user});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -21,11 +23,11 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<ChatUser?> _user;
   final _formKey = GlobalKey<FormState>();
+  String? _image;
 
   @override
   void initState() {
     super.initState();
-    APIs.getSelf();
     _user = APIs.getMe();
   }
 
@@ -61,28 +63,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SizedBox(width: mq.width, height: mq.height * .03),
                         Stack(
                           children: [
-                            ClipRRect(
-                                borderRadius:
-                                    BorderRadius.circular(mq.height * .1),
-                                child: CachedNetworkImage(
-                                  width: mq.height * .2,
-                                  height: mq.height * .2,
-                                  fit: BoxFit.fill,
-                                  imageUrl: user.image,
-                                  errorWidget: (context, url, error) =>
-                                      const CircleAvatar(
-                                          child: Icon(
-                                    CupertinoIcons.person,
-                                    size: 50,
-                                  )),
-                                )),
+                            _image != null
+                                ? ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(mq.height * .1),
+                                    child: Image.file(
+                                      File(_image!),
+                                      width: mq.height * .2,
+                                      height: mq.height * .2,
+                                      fit: BoxFit.cover,
+                                    ))
+                                :
+                                //picture
+                                ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(mq.height * .1),
+                                    child: CachedNetworkImage(
+                                      width: mq.height * .2,
+                                      height: mq.height * .2,
+                                      fit: BoxFit.cover,
+                                      imageUrl: user.image,
+                                      errorWidget: (context, url, error) =>
+                                          const CircleAvatar(
+                                              child: Icon(
+                                        CupertinoIcons.person,
+                                        size: 50,
+                                      )),
+                                    )),
                             Positioned(
                               bottom: 0,
                               right: 0,
                               child: MaterialButton(
                                   elevation: 1,
                                   onPressed: () {
-                                    _showBottom();
+                                    _showBottom(user);
                                   },
                                   shape: CircleBorder(),
                                   color: Colors.white,
@@ -97,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SizedBox(height: mq.height * .05),
                         TextFormField(
                             initialValue: user.name,
-                            onSaved: (val) => APIs.me.name = val ?? '',
+                            onSaved: (val) => user.name = val ?? '',
                             validator: (val) => val != null && val.isNotEmpty
                                 ? null
                                 : 'Неверные поля',
@@ -110,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SizedBox(height: mq.height * .02),
                         TextFormField(
                             initialValue: user.about,
-                            onSaved: (val) => APIs.me.about = val ?? '',
+                            onSaved: (val) => user.about = val ?? '',
                             validator: (val) => val != null && val.isNotEmpty
                                 ? null
                                 : 'Неверное имя',
@@ -131,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                               if (_formKey.currentState!.validate()) {
                                 final nameExists =
-                                    await APIs.userWithNameExists(APIs.me.name);
+                                    await APIs.userWithNameExists(user.name);
                                 if (nameExists) {
                                   showToast(
                                       message:
@@ -139,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   return;
                                 }
 
-                                APIs.updateUserInfo();
+                                APIs.updateUserInfo(user);
                                 showToast(
                                     message: "Пользователь успешно обновлен!");
                               }
@@ -164,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showBottom() {
+  void _showBottom(ChatUser user) {
     showModalBottomSheet(
         context: context,
         shape: const RoundedRectangleBorder(
@@ -179,32 +193,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text('Изменить фото профиля',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
-
-              SizedBox(height: mq.height *.02),
-
+              SizedBox(height: mq.height * .02),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-
                   Column(
                     //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: const CircleBorder(),
-                          fixedSize: Size(mq.width * .3, mq.height *.15)
-                        ),
-                          onPressed: () async{
-                          /*final ImagePicker picker = ImagePicker();
-                          final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-                          if(image != null){
-                            print("Image path: ${image.path} ---- and type ${image.mimeType}");
-                          }*/
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: const CircleBorder(),
+                              fixedSize: Size(mq.width * .3, mq.height * .15)),
+                          onPressed: () async {
+                            final ImagePicker picker = ImagePicker();
+                            final XFile? image = await picker.pickImage(
+                                source: ImageSource.gallery, imageQuality: 80);
+                            if (image != null) {
+                              print("Image path: ${image.path} ---- and type ${image.mimeType}");
+
+                              setState(() {
+                                _image = image.path;
+                              });
+
+                              APIs.updateProfilePicture(user,File(_image!) );
+                              Navigator.pop(context);
+                            }
                           },
                           child: Image.asset('images/gallery.png')),
                       SizedBox(height: mq.height * .005),
-                      Text("Выбрать из галереи",style: TextStyle( fontWeight: FontWeight.w500)),
+                      Text("Выбрать из галереи",
+                          style: TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
                   Column(
@@ -213,12 +232,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               shape: const CircleBorder(),
-                              fixedSize: Size(mq.width * .3, mq.height *.15)
-                          ),
-                          onPressed: (){},
+                              fixedSize: Size(mq.width * .3, mq.height * .15)),
+                          onPressed: () async {
+                            final ImagePicker picker = ImagePicker();
+                            final XFile? image = await picker.pickImage(
+                                source: ImageSource.camera, imageQuality: 80);
+                            if (image != null) {
+                              print("Image path: ${image.path} ");
+
+                              setState(() {
+                                _image = image.path;
+                              });
+
+                              APIs.updateProfilePicture(user,File(_image!) );
+
+                              Navigator.pop(context);
+                            }
+                          },
                           child: Image.asset('images/camera.png')),
                       SizedBox(height: mq.height * .005),
-                      Text("Сделать фото",style: TextStyle( fontWeight: FontWeight.w500)),
+                      Text("Сделать фото",
+                          style: TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
                 ],

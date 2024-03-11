@@ -128,16 +128,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                 }
               })
-        /*Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                Text("Чаты"),
-              ]),
-            )
-          ),*/
       ),
     ),);
   }

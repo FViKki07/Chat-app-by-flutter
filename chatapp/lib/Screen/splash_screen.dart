@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -15,6 +16,12 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState(){
     Future.delayed(
       Duration(seconds: 3),(){
+      //SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+         // systemNavigationBarColor: Colors.blueAccent,
+        statusBarColor: Colors.blueAccent
+      ));
+
       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>widget.child!), (route) => false);
     }
     );

@@ -1,5 +1,5 @@
 import 'package:chatapp/api/apis.dart';
-import 'package:chatapp/message.dart';
+import 'package:chatapp/helper/message.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseAuthService{

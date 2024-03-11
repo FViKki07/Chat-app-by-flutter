@@ -32,11 +32,11 @@ class MyApp extends StatelessWidget {
     mq = MediaQuery.of(context).size;
 
     return MaterialApp(
+
       debugShowCheckedModeBanner: false,
       title: 'Друг рядом',
       routes: {
         '/': (context) => SplashScreen(
-          // Here, you can decide whether to show the LoginPage or HomePage based on user authentication
           child: returnHome(),
         ),
         '/login': (context) => const LoginScreen(),
