@@ -144,10 +144,18 @@ class APIs {
   }
 
   static Future<void> updateMessageReadStatus(Message message) async {
-    print("fromid: ${message.time} convered ${getConversationID(message.fromId)}");
     firestore
         .collection('chats/${getConversationID(message.fromId)}/messages/')
         .doc(message.time)
         .update({'read': DateTime.now().millisecondsSinceEpoch.toString()});
+  }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getLastMessage(
+      ChatUser chatUser) {
+    return firestore
+        .collection('chats/${getConversationID(chatUser.id)}/messages/')
+        .orderBy('time', descending: true)
+        .limit(1)
+        .snapshots();
   }
 }

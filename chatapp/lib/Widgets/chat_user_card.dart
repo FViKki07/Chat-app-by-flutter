@@ -1,8 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatapp/Models/chatuser.dart';
+import 'package:chatapp/api/apis.dart';
+import 'package:chatapp/helper/conver_date.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../Models/message.dart';
 import '../Screen/chat_screen.dart';
 import '../main.dart';
 
@@ -16,6 +19,8 @@ class ChatUserCard extends StatefulWidget {
 }
 
 class _ChatUserCardState extends State<ChatUserCard> {
+  Message? _message;
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -25,23 +30,57 @@ class _ChatUserCardState extends State<ChatUserCard> {
       //color: Colors.blue.shade100,
       child: InkWell(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(user: widget.user)));
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => ChatScreen(user: widget.user)));
         },
-        child:  ListTile(
-          leading:ClipRRect(
-            borderRadius: BorderRadius.circular(mq.height*.03),
-            child: CachedNetworkImage(
-              width: mq.height * .055,
-              height: mq.height * .055,
-              imageUrl: widget.user.image,
-              errorWidget: (context, url, error) =>
-                  const CircleAvatar(child: Icon(CupertinoIcons.person))
-            ),
-          ),
-          //const CircleAvatar(child: Icon(CupertinoIcons.person),),
-          title: Text(widget.user.name),
-          subtitle: Text(widget.user.about, maxLines: 1,),
-          trailing: Text('12:00', style : TextStyle(color:Colors.black54)),
+        child: StreamBuilder(
+          stream: APIs.getLastMessage(widget.user),
+          builder: (context, snapshot) {
+            final data = snapshot.data?.docs;
+
+            final _list =
+                data?.map((e) => Message.fromJson(e.data())).toList() ?? [];
+
+            if (_list.isNotEmpty) {
+              _message = _list.first;
+            }
+
+            return ListTile(
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(mq.height * .03),
+                child: CachedNetworkImage(
+                    width: mq.height * .055,
+                    height: mq.height * .055,
+                    imageUrl: widget.user.image,
+                    errorWidget: (context, url, error) =>
+                        const CircleAvatar(child: Icon(CupertinoIcons.person))),
+              ),
+              //const CircleAvatar(child: Icon(CupertinoIcons.person),),
+              title: Text(widget.user.name),
+
+              subtitle: Text(
+                _message != null ? _message!.message : widget.user.about,
+                maxLines: 1,
+              ),
+
+              trailing: _message == null
+                  ? null
+                  : ((_message?.read == null &&
+                          APIs.user.uid != _message!.fromId)
+                      ? Container(
+                          width: 15,
+                          height: 15,
+                          decoration: BoxDecoration(
+                              color: Colors.greenAccent.shade200,
+                              borderRadius: BorderRadius.circular(10)),
+                        )
+                      : Text(
+                          ConvertDate.getConvertedTime(
+                              context: context, time: _message!.time),
+                          style: TextStyle(color: Colors.black54))),
+              //trailing: Text('12:00', style : TextStyle(color:Colors.black54)),
+            );
+          },
         ),
       ),
     );
