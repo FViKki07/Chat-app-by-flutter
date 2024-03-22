@@ -11,8 +11,9 @@ import '../main.dart';
 
 class ChatUserCard extends StatefulWidget {
   final ChatUser user;
+  final String roomId = null;
 
-  const ChatUserCard({super.key, required this.user});
+  const ChatUserCard({super.key, required this.user, required roomId});
 
   @override
   State<ChatUserCard> createState() => _ChatUserCardState();
@@ -20,6 +21,7 @@ class ChatUserCard extends StatefulWidget {
 
 class _ChatUserCardState extends State<ChatUserCard> {
   Message? _message;
+  late String roomId;
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +39,12 @@ class _ChatUserCardState extends State<ChatUserCard> {
           stream: APIs.getLastMessage(widget.user),
           builder: (context, snapshot) {
             final data = snapshot.data?.docs;
-
             final _list =
                 data?.map((e) => Message.fromJson(e.data())).toList() ?? [];
-
             if (_list.isNotEmpty) {
               _message = _list.first;
             }
+
 
             return ListTile(
               leading: ClipRRect(
@@ -52,6 +53,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                     width: mq.height * .055,
                     height: mq.height * .055,
                     imageUrl: widget.user.image,
+                    fit: BoxFit.cover,
                     errorWidget: (context, url, error) =>
                         const CircleAvatar(child: Icon(CupertinoIcons.person))),
               ),
@@ -59,13 +61,14 @@ class _ChatUserCardState extends State<ChatUserCard> {
               title: Text(widget.user.name),
 
               subtitle: Text(
-                _message != null ? _message!.message : widget.user.about,
+                _message == null ? widget.user.about :
+                _message!.type == Type.text ? _message!.message : 'Фотография',
                 maxLines: 1,
               ),
 
               trailing: _message == null
                   ? null
-                  : ((_message?.read == null &&
+                  : ((_message!.read.isEmpty &&
                           APIs.user.uid != _message!.fromId)
                       ? Container(
                           width: 15,
@@ -75,7 +78,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                               borderRadius: BorderRadius.circular(10)),
                         )
                       : Text(
-                          ConvertDate.getConvertedTime(
+                          ConvertDate.getDateOfLastMsg(
                               context: context, time: _message!.time),
                           style: TextStyle(color: Colors.black54))),
               //trailing: Text('12:00', style : TextStyle(color:Colors.black54)),
@@ -85,4 +88,14 @@ class _ChatUserCardState extends State<ChatUserCard> {
       ),
     );
   }
+
+  Future<bool> _findRoom(ChatUser chatUser) async{
+    var idRooms = chatUser.roomId.where((id) => APIs.meInfo.roomId.contains(id));
+    var rooms = await APIs.firestore.collection('rooms').where('id', isEqualTo: idRooms).where('authorizedUsers', ).get();
+    if(rooms.docs.isNotEmpty){
+      rooms.docs.where((element) => element.get(''))
+    }
+    APIs.meInfo.roomId
+  }
+
 }

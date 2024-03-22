@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:chatapp/Models/chatuser.dart';
@@ -5,7 +6,12 @@ import 'package:chatapp/Models/message.dart';
 import 'package:chatapp/Widgets/chat_user_card.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+import '../Models/room.dart';
 
 class APIs {
   static FirebaseAuth auth = FirebaseAuth.instance;
@@ -14,16 +20,67 @@ class APIs {
 
   static FirebaseStorage storage = FirebaseStorage.instance;
 
+  static FirebaseMessaging messaging = FirebaseMessaging.instance;
+
   static User get user => auth.currentUser!;
 
   static User? getAuthUser() {
     return auth.currentUser;
   }
 
-  //static late ChatUser me;
+  static late ChatUser meInfo;
 
   static Future<bool> userExists() async {
     return (await firestore.collection('users').doc(user.uid).get()).exists;
+  }
+
+  static Future<void> getMessagingToken() async {
+    await messaging.requestPermission();
+
+    await messaging.getToken().then((t) {
+      if (t != null) {
+        meInfo.pushToken = t;
+        print('Push token : $t');
+      }
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Got a message whilst in the foreground!');
+      print('Message data: ${message.data}');
+
+      if (message.notification != null) {
+        print('Message also contained a notification: ${message.notification}');
+      }
+    });
+  }
+
+  static Future<void> sendPushNotification(
+      ChatUser chatUser, String msg) async {
+    try {
+      final body = {
+        "to": chatUser.pushToken,
+        "notification": {
+          "title": meInfo.name,
+          "body": msg,
+          "android_channel_id": "chats",},
+        "data": {
+          "some_data" : "User ID: ${meInfo.id}",
+        },
+      };
+
+      var response =
+        await http.post(Uri.parse('https://fcm.googleapis.com/fcm/send'),
+          headers: {
+            HttpHeaders.contentTypeHeader: 'application/json',
+            HttpHeaders.authorizationHeader:
+                    'key=AAAA6_I92lE:APA91bEWxbaViJSJG4itO2PD2uTWm9VI5agoM5B4_Ie8cl2Hi31B9TCBoyjb1OOnOAd6LhJluxiE0NXVSZjR57R0Lwdx2rumFxNALAnBKlTbMr_FKOA6Ll1fDJqDgZm3_vJPWBEIIV7g'
+              },
+              body: jsonEncode(body));
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    } catch (e) {
+      print('\nsendPushError: $e');
+    }
   }
 
   /*static ChatUser me = ChatUser(
@@ -55,12 +112,27 @@ class APIs {
     return me;
   }
 
-  static Future<void> createUser(String name_from_field) async {
+  static Future<void> getSelfInfo() async {
+    await firestore.collection('users').doc(user.uid).get().then((user) async {
+      if (user.exists) {
+        meInfo = ChatUser.fromJson(user.data()!);
+        await getMessagingToken();
+
+        //for setting user status to active
+        APIs.updateActiveStatus(true);
+      } else {
+        await createUser('NoName').then((value) => getSelfInfo());
+      }
+    });
+  }
+
+  static Future<void> createUser(String nameFromField) async {
     final time = DateTime.now().microsecondsSinceEpoch.toString();
 
     final chatUser = ChatUser(
+        roomId: [],
         image: '',
-        name: name_from_field,
+        name: nameFromField,
         about: 'about',
         createdAt: time,
         lastActive: time,
@@ -81,11 +153,44 @@ class APIs {
         .snapshots();
   }
 
+  static Future<QuerySnapshot<Map<String, dynamic>>> allUsers() async {
+    final users = await firestore
+      .collection('users')
+      .where("id", isNotEqualTo: user.uid)
+      .get();
+
+    return users;
+  }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllRooms() {
+    //List<String> idRooms = meInfo.roomId;
+    return firestore
+        .collection('rooms')
+        //.where('id',isEqualTo: idRooms)
+        .snapshots();
+  }
+
   static Future<void> updateUserInfo(ChatUser me) async {
     await firestore
         .collection('users')
         .doc(user.uid)
         .update({'name': me.name, 'about': me.about});
+  }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getUserInfo(
+      ChatUser chatUser) {
+    return firestore
+        .collection('users')
+        .where('id', isEqualTo: chatUser.id)
+        .snapshots();
+  }
+
+  static Future<void> updateActiveStatus(bool isOnline) async {
+    firestore.collection('users').doc(user.uid).update({
+      'is_online': isOnline,
+      'last_active': DateTime.now().microsecondsSinceEpoch.toString(),
+      'push_token': meInfo.pushToken
+    });
   }
 
   static Future<bool> userWithNameExists(String name) async {
@@ -124,30 +229,67 @@ class APIs {
       ChatUser user) {
     return firestore
         .collection('chats/${getConversationID(user.id)}/messages')
-        .orderBy('time')
+        .orderBy('time', descending: true)
         .snapshots();
   }
 
-  static Future<void> sendMessage(ChatUser chatUser, String msg) async {
+  static Future<Stream<QuerySnapshot<Map<String, dynamic>>>?> getRoomMessages(
+      ChatUser user) async {
+    var rooms = await getPersonalRoom(user);
+    if(rooms.docs.length > 0)
+      return firestore
+            .collection('rooms/${rooms.docs.first.id}/messages')
+            .orderBy('time', descending: true)
+            .snapshots();
+    return null;
+  }
+
+  static Future<QuerySnapshot<Map<String, dynamic>>> getPersonalRoom(ChatUser chatUser){
+    final idRoomsMy = meInfo.roomId;
+    return firestore.collection('rooms')
+        .where("id", arrayContainsAny: idRoomsMy)
+        .where("authorizedUsers",arrayContains: chatUser.id)
+        .where("type",isEqualTo: TypeRoom.personal)
+        .get();
+  }
+
+  static Future<void> sendMessage(
+      ChatUser chatUser, String msg, Type type) async {
     final time = DateTime.now().microsecondsSinceEpoch.toString();
 
     final Message message = Message(
         toId: chatUser.id,
         read: '',
-        type: Type.text,
+        type: type,
         message: msg,
         fromId: user.uid,
         time: time);
     final ref = firestore
         .collection('chats/${getConversationID(chatUser.id)}/messages/');
-    await ref.doc(time).set(message.toJson());
+    await ref.doc(time).set(message.toJson()).then((val) => sendPushNotification(chatUser,type == Type.text ? msg : 'Фотография'));
+  }
+
+  static Future<void> sendMessage2(
+      ChatUser chatUser, String msg, Type type, Room idRoom) async {
+    final time = DateTime.now().microsecondsSinceEpoch.toString();
+
+    final Message message = Message(
+        toId: chatUser.id,
+        read: '',
+        type: type,
+        message: msg,
+        fromId: user.uid,
+        time: time);
+    final ref = firestore
+        .collection('rooms/${idRoom}/messages/');
+    await ref.doc(time).set(message.toJson()).then((val) => sendPushNotification(chatUser,type == Type.text ? msg : 'Фотография'));
   }
 
   static Future<void> updateMessageReadStatus(Message message) async {
     firestore
         .collection('chats/${getConversationID(message.fromId)}/messages/')
         .doc(message.time)
-        .update({'read': DateTime.now().millisecondsSinceEpoch.toString()});
+        .update({'read': DateTime.now().microsecondsSinceEpoch.toString()});
   }
 
   static Stream<QuerySnapshot<Map<String, dynamic>>> getLastMessage(
@@ -157,5 +299,14 @@ class APIs {
         .orderBy('time', descending: true)
         .limit(1)
         .snapshots();
+  }
+
+  static Future<void> sendImage(ChatUser chatUser, File file) async {
+    final ext = file.path.split('.').last;
+    final ref = storage.ref().child(
+        'images/${getConversationID(chatUser.id)}/${DateTime.now().microsecondsSinceEpoch}.$ext');
+    await ref.putFile(file, SettableMetadata(contentType: 'image/$ext'));
+    final imageUrl = await ref.getDownloadURL();
+    await sendMessage(chatUser, imageUrl, Type.image);
   }
 }

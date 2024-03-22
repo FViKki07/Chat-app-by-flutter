@@ -37,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.blueAccent,
-        title: Text("Чаты"),
+        title: Text("Профиль"),
       ),
       endDrawer: const NavigationDrawerWidget(),
       body: GestureDetector(
@@ -238,7 +238,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             final XFile? image = await picker.pickImage(
                                 source: ImageSource.camera, imageQuality: 80);
                             if (image != null) {
-                              print("Image path: ${image.path} ");
 
                               setState(() {
                                 _image = image.path;

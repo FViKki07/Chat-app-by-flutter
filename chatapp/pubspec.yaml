@@ -68,6 +68,11 @@ dependencies:
   cupertino_icons: ^1.0.2
   cached_network_image: ^3.2.3
   image_picker: ^1.0.7
+  emoji_picker_flutter: ^1.6.4
+  firebase_messaging: ^14.7.17
+  app_settings: ^5.1.1
+  http: ^1.2.0
+  flutter_notification_channel: ^2.0.0
 
 dev_dependencies:
   flutter_test:

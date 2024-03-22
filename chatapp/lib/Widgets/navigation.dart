@@ -1,3 +1,4 @@
+import 'package:chatapp/api/apis.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
@@ -49,8 +50,11 @@ Widget buildMenuItems(BuildContext context) => Column(
         ListTile(
           leading: const Icon(Icons.output),
           title: const Text('Выйти'),
-            onTap: () {
+            onTap: () async {
+              APIs.updateActiveStatus(false);
+              //APIs.auth = FirebaseAuth.instance;
               FirebaseAuth.instance.signOut();
+
               Navigator.pushNamedAndRemoveUntil(context, "/login",(route) => false);
               showToast(message: "Вы успешно вышли из аккаунта");
             },
