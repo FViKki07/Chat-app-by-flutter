@@ -11,9 +11,9 @@ import '../main.dart';
 
 class ChatUserCard extends StatefulWidget {
   final ChatUser user;
-  final String roomId = null;
+  //final String roomId = null;
 
-  const ChatUserCard({super.key, required this.user, required roomId});
+  const ChatUserCard({super.key, required this.user}); //, required roomId});
 
   @override
   State<ChatUserCard> createState() => _ChatUserCardState();
@@ -21,7 +21,6 @@ class ChatUserCard extends StatefulWidget {
 
 class _ChatUserCardState extends State<ChatUserCard> {
   Message? _message;
-  late String roomId;
 
   @override
   Widget build(BuildContext context) {
@@ -45,24 +44,34 @@ class _ChatUserCardState extends State<ChatUserCard> {
               _message = _list.first;
             }
 
-
             return ListTile(
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(mq.height * .03),
-                child: CachedNetworkImage(
-                    width: mq.height * .055,
-                    height: mq.height * .055,
-                    imageUrl: widget.user.image,
-                    fit: BoxFit.cover,
-                    errorWidget: (context, url, error) =>
-                        const CircleAvatar(child: Icon(CupertinoIcons.person))),
+                child: /*const CircleAvatar(
+                  child: Icon(CupertinoIcons.person),
+                ),*/
+                    widget.user.image.isEmpty
+                        ? const CircleAvatar(
+                            child: Icon(CupertinoIcons.person),
+                          )
+                        : CachedNetworkImage(
+                            width: mq.height * .055,
+                            height: mq.height * .055,
+                            imageUrl: widget.user.image,
+                            fit: BoxFit.cover,
+                            errorWidget: (context, url, error) =>
+                                const CircleAvatar(
+                                    child: Icon(CupertinoIcons.person))),
               ),
               //const CircleAvatar(child: Icon(CupertinoIcons.person),),
               title: Text(widget.user.name),
 
               subtitle: Text(
-                _message == null ? widget.user.about :
-                _message!.type == Type.text ? _message!.message : 'Фотография',
+                _message == null
+                    ? widget.user.about
+                    : _message!.type == Type.text
+                        ? _message!.message
+                        : 'Фотография',
                 maxLines: 1,
               ),
 
@@ -88,14 +97,4 @@ class _ChatUserCardState extends State<ChatUserCard> {
       ),
     );
   }
-
-  Future<bool> _findRoom(ChatUser chatUser) async{
-    var idRooms = chatUser.roomId.where((id) => APIs.meInfo.roomId.contains(id));
-    var rooms = await APIs.firestore.collection('rooms').where('id', isEqualTo: idRooms).where('authorizedUsers', ).get();
-    if(rooms.docs.isNotEmpty){
-      rooms.docs.where((element) => element.get(''))
-    }
-    APIs.meInfo.roomId
-  }
-
 }

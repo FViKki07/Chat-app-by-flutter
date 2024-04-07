@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../helper/message.dart';
+
 class NavigationDrawerWidget extends StatelessWidget {
   const NavigationDrawerWidget({Key? key}) : super(key: key);
 
@@ -33,7 +35,8 @@ Widget buildMenuItems(BuildContext context) => Column(
           leading: const Icon(Icons.chat),
           title: const Text('Чаты'),
           onTap: () {
-            Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+                context, "/home", (route) => false);
           },
         ),
         ListTile(
@@ -44,20 +47,31 @@ Widget buildMenuItems(BuildContext context) => Column(
             Navigator.pushNamed(context, "/user");
           },
         ),
+        ListTile(
+          leading: const Icon(Icons.location_searching),
+          title: const Text('Найти местоположение'),
+          onTap: () async {
+            Position myPosition = await APIs.determinePosition();
+            print('My position: ${myPosition.toString()}');
+          },
+        ),
         const Divider(
           color: Colors.black,
         ),
         ListTile(
           leading: const Icon(Icons.output),
           title: const Text('Выйти'),
-            onTap: () async {
-              APIs.updateActiveStatus(false);
-              //APIs.auth = FirebaseAuth.instance;
-              FirebaseAuth.instance.signOut();
+          onTap: () async {
+            Navigator.pushNamedAndRemoveUntil(
+                    context, "/login", (route) => false)
+                .then((_) => {APIs.updateActiveStatus(false)})
+                .then((_) => FirebaseAuth.instance.signOut());
 
-              Navigator.pushNamedAndRemoveUntil(context, "/login",(route) => false);
-              showToast(message: "Вы успешно вышли из аккаунта");
-            },
+            //APIs.auth = FirebaseAuth.instance;
+            //FirebaseAuth.instance.signOut();
+
+            showToast(message: "Вы успешно вышли из аккаунта");
+          },
         )
       ],
     );

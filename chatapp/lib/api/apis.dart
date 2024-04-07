@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
 import '../Models/room.dart';
@@ -62,17 +63,18 @@ class APIs {
         "notification": {
           "title": meInfo.name,
           "body": msg,
-          "android_channel_id": "chats",},
+          "android_channel_id": "chats",
+        },
         "data": {
-          "some_data" : "User ID: ${meInfo.id}",
+          "some_data": "User ID: ${meInfo.id}",
         },
       };
 
       var response =
-        await http.post(Uri.parse('https://fcm.googleapis.com/fcm/send'),
-          headers: {
-            HttpHeaders.contentTypeHeader: 'application/json',
-            HttpHeaders.authorizationHeader:
+          await http.post(Uri.parse('https://fcm.googleapis.com/fcm/send'),
+              headers: {
+                HttpHeaders.contentTypeHeader: 'application/json',
+                HttpHeaders.authorizationHeader:
                     'key=AAAA6_I92lE:APA91bEWxbaViJSJG4itO2PD2uTWm9VI5agoM5B4_Ie8cl2Hi31B9TCBoyjb1OOnOAd6LhJluxiE0NXVSZjR57R0Lwdx2rumFxNALAnBKlTbMr_FKOA6Ll1fDJqDgZm3_vJPWBEIIV7g'
               },
               body: jsonEncode(body));
@@ -152,7 +154,7 @@ class APIs {
         .where("id", isNotEqualTo: user.uid)
         .snapshots();
   }
-
+/*
   static Future<QuerySnapshot<Map<String, dynamic>>> allUsers() async {
     final users = await firestore
       .collection('users')
@@ -168,7 +170,7 @@ class APIs {
         .collection('rooms')
         //.where('id',isEqualTo: idRooms)
         .snapshots();
-  }
+  }*/
 
   static Future<void> updateUserInfo(ChatUser me) async {
     await firestore
@@ -233,6 +235,7 @@ class APIs {
         .snapshots();
   }
 
+/*
   static Future<Stream<QuerySnapshot<Map<String, dynamic>>>?> getRoomMessages(
       ChatUser user) async {
     var rooms = await getPersonalRoom(user);
@@ -251,7 +254,7 @@ class APIs {
         .where("authorizedUsers",arrayContains: chatUser.id)
         .where("type",isEqualTo: TypeRoom.personal)
         .get();
-  }
+  }*/
 
   static Future<void> sendMessage(
       ChatUser chatUser, String msg, Type type) async {
@@ -266,23 +269,8 @@ class APIs {
         time: time);
     final ref = firestore
         .collection('chats/${getConversationID(chatUser.id)}/messages/');
-    await ref.doc(time).set(message.toJson()).then((val) => sendPushNotification(chatUser,type == Type.text ? msg : 'Фотография'));
-  }
-
-  static Future<void> sendMessage2(
-      ChatUser chatUser, String msg, Type type, Room idRoom) async {
-    final time = DateTime.now().microsecondsSinceEpoch.toString();
-
-    final Message message = Message(
-        toId: chatUser.id,
-        read: '',
-        type: type,
-        message: msg,
-        fromId: user.uid,
-        time: time);
-    final ref = firestore
-        .collection('rooms/${idRoom}/messages/');
-    await ref.doc(time).set(message.toJson()).then((val) => sendPushNotification(chatUser,type == Type.text ? msg : 'Фотография'));
+    await ref.doc(time).set(message.toJson()).then((val) =>
+        sendPushNotification(chatUser, type == Type.text ? msg : 'Фотография'));
   }
 
   static Future<void> updateMessageReadStatus(Message message) async {
@@ -308,5 +296,53 @@ class APIs {
     await ref.putFile(file, SettableMetadata(contentType: 'image/$ext'));
     final imageUrl = await ref.getDownloadURL();
     await sendMessage(chatUser, imageUrl, Type.image);
+  }
+
+  static Future<Position> determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return await Geolocator.getCurrentPosition();
+  }
+
+  static Future<void> deleteMessage(Message message) async {
+    await firestore
+        .collection('chats/${getConversationID(message.toId)}/messages/')
+        .doc(message.time)
+        .delete();
+
+    if (message.type == Type.image) {
+      await storage.refFromURL(message.message).delete();
+    }
   }
 }

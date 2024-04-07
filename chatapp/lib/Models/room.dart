@@ -1,6 +1,6 @@
 class Room {
   Room({
-    required final String title;
+    required this.title,
     required this.timeCreate,
     required this.authorizedUsers,
     required this.type,
@@ -14,13 +14,16 @@ class Room {
   late final String roomId;
   late final List<String> moderators;
 
-  Room.fromJson(Map<String, dynamic> json){
+  Room.fromJson(Map<String, dynamic> json) {
     title = json['title'] ?? '';
     timeCreate = json['timeCreate'] ?? '';
-    authorizedUsers = List.castFrom<dynamic, String>(json['authorizedUsers']) ?? [];
-    type = json['type'] == TypeRoom.personal.name ? TypeRoom.personal: TypeRoom.group;
+    authorizedUsers =
+        List.castFrom<dynamic, String>(json['authorizedUsers']) ?? [];
+    type = json['type'] == TypeRoom.personal.name
+        ? TypeRoom.personal
+        : TypeRoom.group;
     roomId = json['roomId'] ?? '';
-    moderators = List.castFrom<dynamic, String>(json['moderators'])?? [];
+    moderators = List.castFrom<dynamic, String>(json['moderators']) ?? [];
   }
 
   Map<String, dynamic> toJson() {
@@ -35,4 +38,4 @@ class Room {
   }
 }
 
-enum TypeRoom{personal, group}
+enum TypeRoom { personal, group }

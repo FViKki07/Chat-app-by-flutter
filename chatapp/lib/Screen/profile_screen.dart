@@ -63,16 +63,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SizedBox(width: mq.width, height: mq.height * .03),
                         Stack(
                           children: [
-                            _image != null
+                            (_image == null && _image == "")
                                 ? ClipRRect(
                                     borderRadius:
                                         BorderRadius.circular(mq.height * .1),
-                                    child: Image.file(
-                                      File(_image!),
-                                      width: mq.height * .2,
-                                      height: mq.height * .2,
-                                      fit: BoxFit.cover,
-                                    ))
+                                    child: const CircleAvatar(
+                                        child: Icon(
+                                      CupertinoIcons.person,
+                                      size: 50,
+                                    )))
                                 :
                                 //picture
                                 ClipRRect(
@@ -210,13 +209,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             final XFile? image = await picker.pickImage(
                                 source: ImageSource.gallery, imageQuality: 80);
                             if (image != null) {
-                              print("Image path: ${image.path} ---- and type ${image.mimeType}");
+                              print(
+                                  "Image path: ${image.path} ---- and type ${image.mimeType}");
 
                               setState(() {
                                 _image = image.path;
                               });
 
-                              APIs.updateProfilePicture(user,File(_image!) );
+                              APIs.updateProfilePicture(user, File(_image!));
                               Navigator.pop(context);
                             }
                           },
@@ -238,12 +238,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             final XFile? image = await picker.pickImage(
                                 source: ImageSource.camera, imageQuality: 80);
                             if (image != null) {
-
                               setState(() {
                                 _image = image.path;
                               });
 
-                              APIs.updateProfilePicture(user,File(_image!) );
+                              APIs.updateProfilePicture(user, File(_image!));
 
                               Navigator.pop(context);
                             }

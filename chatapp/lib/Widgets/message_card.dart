@@ -2,7 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatapp/Models/message.dart';
 import 'package:chatapp/api/apis.dart';
 import 'package:chatapp/helper/conver_date.dart';
+import 'package:chatapp/helper/message.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../main.dart';
 
@@ -18,9 +20,13 @@ class MessageCard extends StatefulWidget {
 class _MessageCardState extends State<MessageCard> {
   @override
   Widget build(BuildContext context) {
-    return APIs.user.uid == widget.message.fromId
-        ? _selfMessage()
-        : _opponMessage();
+    bool isMe = APIs.user.uid == widget.message.fromId ? true : false;
+
+    return InkWell(
+        onLongPress: () {
+          _showBottom(APIs.user.uid == widget.message.fromId);
+        },
+        child: isMe ? _selfMessage() : _opponMessage());
   }
 
   Widget _opponMessage() {
@@ -48,24 +54,24 @@ class _MessageCardState extends State<MessageCard> {
                 )),
             child: widget.message.type == Type.text
                 ?
-            //show text
-            Text(
-              widget.message.message,
-              style: const TextStyle(fontSize: 15, color: Colors.black87),
-            )
+                //show text
+                Text(
+                    widget.message.message,
+                    style: const TextStyle(fontSize: 15, color: Colors.black87),
+                  )
                 :
-            //show image
-            ClipRRect(
-              child: CachedNetworkImage(
-                imageUrl: widget.message.message,
-                placeholder: (context, url) => const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                errorWidget: (context, url, error) =>
-                const Icon(Icons.image, size: 70),
-              ),
-            ),
+                //show image
+                ClipRRect(
+                    child: CachedNetworkImage(
+                      imageUrl: widget.message.message,
+                      placeholder: (context, url) => const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.image, size: 70),
+                    ),
+                  ),
           ),
         ),
         Padding(
@@ -120,26 +126,24 @@ class _MessageCardState extends State<MessageCard> {
               children: [
                 Flexible(
                   child: widget.message.type == Type.text
-                      ?
-                  Text(
-                    widget.message.message,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black,
-                    ),
-                  )
-                      :
-                  ClipRRect(
-                    child: CachedNetworkImage(
-                      imageUrl: widget.message.message,
-                      placeholder: (context, url) => const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      errorWidget: (context, url, error) =>
-                      const Icon(Icons.image, size: 70),
-                    ),
-                  ),
+                      ? Text(
+                          widget.message.message,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.black,
+                          ),
+                        )
+                      : ClipRRect(
+                          child: CachedNetworkImage(
+                            imageUrl: widget.message.message,
+                            placeholder: (context, url) => const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.image, size: 70),
+                          ),
+                        ),
                 ),
                 SizedBox(width: mq.width * .02),
                 if (widget.message.read.isNotEmpty)
@@ -153,5 +157,99 @@ class _MessageCardState extends State<MessageCard> {
         ),
       ],
     );
+  }
+
+  void _showBottom(bool isMe) {
+    showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+        builder: (_) {
+          return ListView(
+            shrinkWrap: true,
+            children: [
+              Container(
+                height: 4,
+                margin: EdgeInsets.symmetric(
+                    vertical: mq.height * .015, horizontal: mq.width * .4),
+                decoration: BoxDecoration(color: Colors.grey),
+              ),
+              widget.message.type == Type.text
+                  ? _OptionItem(
+                      icon: const Icon(Icons.copy_all_rounded,
+                          color: Colors.blue, size: 26),
+                      name: "Скопировать",
+                      onTap: () async {
+                        await Clipboard.setData(
+                                ClipboardData(text: widget.message.message))
+                            .then((value) {
+                          Navigator.pop(context);
+
+                          showToast(message: 'Текст скопирован!');
+                        });
+                      })
+                  : _OptionItem(
+                      icon:
+                          const Icon(Icons.image, color: Colors.blue, size: 26),
+                      name: "Сохранить изображение",
+                      onTap: () {}),
+              if (widget.message.type == Type.text && isMe)
+                _OptionItem(
+                    icon: const Icon(Icons.edit, color: Colors.blue, size: 26),
+                    name: "Редактировать",
+                    onTap: () {}),
+              if (isMe)
+                _OptionItem(
+                    icon: const Icon(Icons.delete, color: Colors.red, size: 26),
+                    name: "Удалить",
+                    onTap: () async {
+                      await APIs.deleteMessage(widget.message).then((value) {
+                        Navigator.pop(context);
+                        showToast(message: "Сообщение удалено");
+                      });
+                    }),
+              Divider(
+                endIndent: mq.width * .04,
+                indent: mq.width * .04,
+              ),
+              _OptionItem(
+                  icon: const Icon(Icons.remove_red_eye,
+                      color: Colors.blue, size: 26),
+                  name:
+                      "Прочтено в: ${ConvertDate.getConvertedTime(context: context, time: widget.message.read)}",
+                  onTap: () {}),
+            ],
+          );
+        });
+  }
+}
+
+class _OptionItem extends StatelessWidget {
+  final Icon icon;
+  final String name;
+  final VoidCallback onTap;
+
+  const _OptionItem(
+      {required this.icon, required this.name, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+        onTap: () => onTap(),
+        child: Padding(
+          padding: EdgeInsets.only(
+              left: mq.width * .05,
+              top: mq.height * .015,
+              bottom: mq.height * .025),
+          child: Row(
+            children: [
+              icon,
+              Flexible(
+                  child: Text('     $name',
+                      style: const TextStyle(fontSize: 15, letterSpacing: 0.5)))
+            ],
+          ),
+        ));
   }
 }
