@@ -11,6 +11,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:geoflutterfire/geoflutterfire.dart';
 
 import '../Models/room.dart';
 
@@ -141,7 +142,8 @@ class APIs {
         isOnline: false,
         id: user.uid,
         pushToken: '',
-        email: user.email.toString());
+        email: user.email.toString(),
+        location: determinePosition().toString());
     return await firestore
         .collection('users')
         .doc(user.uid)
@@ -235,27 +237,6 @@ class APIs {
         .snapshots();
   }
 
-/*
-  static Future<Stream<QuerySnapshot<Map<String, dynamic>>>?> getRoomMessages(
-      ChatUser user) async {
-    var rooms = await getPersonalRoom(user);
-    if(rooms.docs.length > 0)
-      return firestore
-            .collection('rooms/${rooms.docs.first.id}/messages')
-            .orderBy('time', descending: true)
-            .snapshots();
-    return null;
-  }
-
-  static Future<QuerySnapshot<Map<String, dynamic>>> getPersonalRoom(ChatUser chatUser){
-    final idRoomsMy = meInfo.roomId;
-    return firestore.collection('rooms')
-        .where("id", arrayContainsAny: idRoomsMy)
-        .where("authorizedUsers",arrayContains: chatUser.id)
-        .where("type",isEqualTo: TypeRoom.personal)
-        .get();
-  }*/
-
   static Future<void> sendMessage(
       ChatUser chatUser, String msg, Type type) async {
     final time = DateTime.now().microsecondsSinceEpoch.toString();
@@ -298,6 +279,69 @@ class APIs {
     await sendMessage(chatUser, imageUrl, Type.image);
   }
 
+//------------------------LOCATION--------------------------------
+
+  static Future<void> updateLocation() async {
+    await determinePosition().then((value) => firestore
+        .collection('users')
+        .doc(user.uid)
+        .update({'location': value.toString()}));
+  }
+
+  static (double?, double?) getLocation(String loc) {
+    double? latitude, longitude;
+
+    if (loc.isNotEmpty) {
+      var listLocation = loc.split(" ");
+
+      if (listLocation.length >= 3) {
+        latitude = double.tryParse(listLocation[1].split(',').first);
+        longitude = double.tryParse(listLocation[3]);
+      }
+    }
+
+    return (latitude, longitude);
+  }
+
+  static double getDistance(String loc) {
+    var endLatitude = getLocation(loc).$1;
+    var endLongitude = getLocation(loc).$2;
+
+    var startLatitude = getLocation(meInfo.location).$1;
+    var startLongitude = getLocation(meInfo.location).$2;
+
+    if (startLatitude != null &&
+        startLongitude != null &&
+        endLatitude != null &&
+        endLongitude != null) {
+      return Geolocator.distanceBetween(
+          startLatitude, startLongitude, endLatitude, endLongitude);
+    }
+    return double.maxFinite;
+  }
+
+  static Future<List<ChatUser>> getNearUser(List<ChatUser> users) async {
+    /*List<ChatUser> nearly = [];
+    return nearlyArr = getAllUser().listen((event) {
+      event.docs.forEach((element) { 
+        nearly.add(ChatUser.fromJson(element.data()));
+      });
+      nearly.sort(
+        (a, b) => getDistance(a.location).compareTo(getDistance(b.location)));
+       nearly;
+    });*/
+    await updateLocation();
+    users.sort(
+        (a, b) => getDistance(a.location).compareTo(getDistance(b.location)));
+    return users;
+    /*nearlyArr.docs.forEach((element) {
+      nearly.add(ChatUser.fromJson(element.data()));
+    });*/
+
+    //for (var user in nearly) {}
+    //var nearly = users.sort((a,b) => )
+  }
+
   static Future<Position> determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -330,9 +374,7 @@ class APIs {
           'Location permissions are permanently denied, we cannot request permissions.');
     }
 
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
-    return await Geolocator.getCurrentPosition();
+    return await Geolocator.getCurrentPosition(); //.then((value) => );
   }
 
   static Future<void> deleteMessage(Message message) async {

@@ -141,8 +141,10 @@ class _ChatScreenState extends State<ChatScreen> {
     return SafeArea(
       child: InkWell(
         onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_)=>ViewProfileScreen(user: widget.user)));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => ViewProfileScreen(user: widget.user)));
         },
         child: StreamBuilder(
             stream: APIs.getUserInfo(widget.user),
@@ -163,7 +165,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       icon: Icon(Icons.arrow_back, color: Colors.black54)),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(mq.height * .03),
-                    child: widget.user.image == ""
+                    child: widget.user.image.isEmpty
                         ? const CircleAvatar(child: Icon(CupertinoIcons.person))
                         : CachedNetworkImage(
                             width: mq.height * .05,

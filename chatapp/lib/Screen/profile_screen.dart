@@ -29,6 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _user = APIs.getMe();
+    print(_user.then((value) => print(value?.image.toString())));
   }
 
   @override
@@ -56,6 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               } else {
                 if (snapshot.hasData && snapshot.data != null) {
                   final ChatUser user = snapshot.data!;
+                  print("Image ${user.image.isEmpty} and ${user.image == ""}");
                   return Padding(
                     padding: EdgeInsets.symmetric(horizontal: mq.width * .05),
                     child: Column(
@@ -63,15 +65,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SizedBox(width: mq.width, height: mq.height * .03),
                         Stack(
                           children: [
-                            (_image == null && _image == "")
+                            user.image.isEmpty
                                 ? ClipRRect(
                                     borderRadius:
                                         BorderRadius.circular(mq.height * .1),
-                                    child: const CircleAvatar(
-                                        child: Icon(
-                                      CupertinoIcons.person,
-                                      size: 50,
-                                    )))
+                                    child: CircleAvatar(
+                                        radius: mq.height * .1,
+                                        child: const Icon(
+                                          CupertinoIcons.person,
+                                          size: 50,
+                                        )))
                                 :
                                 //picture
                                 ClipRRect(

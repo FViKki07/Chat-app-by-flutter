@@ -128,7 +128,7 @@ class _MessageCardState extends State<MessageCard> {
                   child: widget.message.type == Type.text
                       ? Text(
                           widget.message.message,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 15,
                             color: Colors.black,
                           ),
@@ -216,8 +216,9 @@ class _MessageCardState extends State<MessageCard> {
               _OptionItem(
                   icon: const Icon(Icons.remove_red_eye,
                       color: Colors.blue, size: 26),
-                  name:
-                      "Прочтено в: ${ConvertDate.getConvertedTime(context: context, time: widget.message.read)}",
+                  name: widget.message.read == ""
+                      ? "Не прочтено"
+                      : "Прочтено в: ${ConvertDate.getDateOfLastMsg(context: context, time: widget.message.read)}",
                   onTap: () {}),
             ],
           );

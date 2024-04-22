@@ -38,29 +38,36 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
         child: Column(
           children: [
             SizedBox(width: mq.width, height: mq.height * .03),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(mq.height * .1),
-              child: CachedNetworkImage(
-                width: mq.height * .2,
-                height: mq.height * .2,
-                fit: BoxFit.cover,
-                imageUrl: widget.user.image,
-                errorWidget: (context, url, error) =>
-                    const CircleAvatar(child: Icon(CupertinoIcons.person)),
-              ),
-            ),
-            widget.user.isOnline ?
-            Text('Онлайн', style: TextStyle(color: Colors.green, fontSize: 16)) :
-            Text('${ConvertDate.getLastActiveTime(context: context, lastActive: widget.user.lastActive)}',
-                style: TextStyle(color: Colors.red, fontSize: 16)),
-
+            widget.user.image.isEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(mq.height * .1),
+                    child: CircleAvatar(
+                        radius: mq.height * .1,
+                        child: const Icon(
+                          CupertinoIcons.person,
+                          size: 50,
+                        )))
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(mq.height * .1),
+                    child: CachedNetworkImage(
+                      width: mq.height * .2,
+                      height: mq.height * .2,
+                      fit: BoxFit.cover,
+                      imageUrl: widget.user.image,
+                      errorWidget: (context, url, error) => const CircleAvatar(
+                          child: Icon(CupertinoIcons.person)),
+                    ),
+                  ),
+            widget.user.isOnline
+                ? const Text('Онлайн',
+                    style: TextStyle(color: Colors.green, fontSize: 16))
+                : Text(
+                    '${ConvertDate.getLastActiveTime(context: context, lastActive: widget.user.lastActive)}',
+                    style: const TextStyle(color: Colors.red, fontSize: 16)),
             SizedBox(height: mq.height * .03),
-
             Text(widget.user.email,
                 style: TextStyle(color: Colors.black54, fontSize: 20)),
-
             SizedBox(height: mq.height * .01),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -70,7 +77,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                 ),
                 Text(
                   '${widget.user.about}',
-                  style: TextStyle(fontSize: 18 , color: Colors.black54),
+                  style: TextStyle(fontSize: 18, color: Colors.black54),
                 ),
               ],
             )

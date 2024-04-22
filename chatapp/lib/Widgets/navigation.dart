@@ -52,7 +52,8 @@ Widget buildMenuItems(BuildContext context) => Column(
           title: const Text('Найти местоположение'),
           onTap: () async {
             Position myPosition = await APIs.determinePosition();
-            print('My position: ${myPosition.toString()}');
+            print(
+                'My position: ${APIs.getLocation(myPosition.toString()).toString()}');
           },
         ),
         const Divider(

@@ -44,27 +44,36 @@ class _ChatUserCardState extends State<ChatUserCard> {
               _message = _list.first;
             }
 
+            print(APIs.getDistance(widget.user.location).toStringAsFixed(3));
+            print(APIs.getDistance(widget.user.location));
+            print(double.maxFinite);
             return ListTile(
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(mq.height * .03),
-                child: /*const CircleAvatar(
-                  child: Icon(CupertinoIcons.person),
-                ),*/
-                    widget.user.image.isEmpty
-                        ? const CircleAvatar(
-                            child: Icon(CupertinoIcons.person),
-                          )
-                        : CachedNetworkImage(
-                            width: mq.height * .055,
-                            height: mq.height * .055,
-                            imageUrl: widget.user.image,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) =>
-                                const CircleAvatar(
-                                    child: Icon(CupertinoIcons.person))),
+                child: widget.user.image.isEmpty
+                    ? const CircleAvatar(
+                        child: Icon(CupertinoIcons.person),
+                      )
+                    : CachedNetworkImage(
+                        width: mq.height * .055,
+                        height: mq.height * .055,
+                        imageUrl: widget.user.image,
+                        fit: BoxFit.cover,
+                        errorWidget: (context, url, error) =>
+                            const CircleAvatar(
+                                child: Icon(CupertinoIcons.person))),
               ),
               //const CircleAvatar(child: Icon(CupertinoIcons.person),),
-              title: Text(widget.user.name),
+              title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(widget.user.name),
+                    (APIs.getDistance(widget.user.location) != double.maxFinite)
+                        ? Text(
+                            " В ${APIs.getDistance(widget.user.location).toStringAsFixed(3)} метрах от вас")
+                        : Text(
+                            "Далеко от вас") //местоположение не обновляется!!
+                  ]),
 
               subtitle: Text(
                 _message == null

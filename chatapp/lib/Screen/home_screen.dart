@@ -27,10 +27,14 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ChatUser> _list_search = [];
   bool _isSearching = false;
 
+  //List<ChatUser> nearlyUser = APIs.getNearUser();
   @override
   void initState() {
     super.initState();
     APIs.getSelfInfo();
+    APIs.updateLocation();
+    //APIs.getNearUser().then((element) =>
+    //  element.forEach((value) => print(value.name + value.email)));
 
     /* getUsers().then((List<ChatUser> fetchedUsers) {
       setState(() {
@@ -54,14 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return Future.value(message);
     });
   }
-
-  /*static Future<List<ChatUser>> getUsers() async {
-    QuerySnapshot<Map<String, dynamic>> usersSnapshot = await APIs.allUsers();
-    List<ChatUser> users = usersSnapshot.docs.map((doc) {
-      return ChatUser.fromJson(doc.data());
-    }).toList();
-    return users;
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -139,10 +135,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
             //floatingActionButton: Padding(),
             body: StreamBuilder(
-                stream: APIs.getAllUser(),
+                stream: APIs.getAllUser(), //APIs.getAllUser(),
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
+                    //return Center(child: CircularProgressIndicator());
                     case ConnectionState.none:
                       return Center(child: CircularProgressIndicator());
                     case ConnectionState.active:
@@ -152,6 +149,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ?.map((e) => ChatUser.fromJson(e.data()))
                               .toList() ??
                           [];
+
+                      //_list_users = snapshot.data ?? [];
                       if (_list_users.isNotEmpty) {
                         return ListView.builder(
                             itemCount: _isSearching
