@@ -11,7 +11,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:geoflutterfire/geoflutterfire.dart';
+import 'package:geoflutterfire2/geoflutterfire2.dart';
 
 import '../Models/room.dart';
 
@@ -25,6 +25,8 @@ class APIs {
   static FirebaseMessaging messaging = FirebaseMessaging.instance;
 
   static User get user => auth.currentUser!;
+
+  static final geo = GeoFlutterFire();
 
   static User? getAuthUser() {
     return auth.currentUser;
@@ -86,24 +88,6 @@ class APIs {
     }
   }
 
-  /*static ChatUser me = ChatUser(
-      id: user.uid,
-      name: user.displayName.toString(),
-      email: user.email.toString(),
-      about: "Hey, I'm using We Chat!",
-      image: user.photoURL.toString(),
-      createdAt: '',
-      isOnline: false,
-      lastActive: '',
-      pushToken: '');*/
-
-  /* static Future<ChatUser>? getSelf() async{
-    var snapshot = await  firestore.collection('users').doc(user.uid).get().then((user) async{
-      me = ChatUser.fromJson(user.data()!);
-    });
-    return me;
-  }*/
-
   static Future<ChatUser?> getMe() async {
     var snapshot = await firestore.collection('users').doc(user.uid).get();
     ChatUser? me;
@@ -143,36 +127,38 @@ class APIs {
         id: user.uid,
         pushToken: '',
         email: user.email.toString(),
-        location: determinePosition().toString());
+        location: await determinePosition().then((value) => value.data));
     return await firestore
         .collection('users')
         .doc(user.uid)
         .set(chatUser.toJson());
   }
 
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getMyUsersId() {
+    return firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('my_users')
+        .snapshots();
+  }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUsers(
+      List<String> userIds) {
+
+    return firestore
+        .collection('users')
+        .where('id',
+        whereIn: userIds.isEmpty
+            ? ['']
+            : userIds)
+        .snapshots();
+  }
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUser() {
     return firestore
         .collection('users')
         .where("id", isNotEqualTo: user.uid)
         .snapshots();
   }
-/*
-  static Future<QuerySnapshot<Map<String, dynamic>>> allUsers() async {
-    final users = await firestore
-      .collection('users')
-      .where("id", isNotEqualTo: user.uid)
-      .get();
-
-    return users;
-  }
-
-  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllRooms() {
-    //List<String> idRooms = meInfo.roomId;
-    return firestore
-        .collection('rooms')
-        //.where('id',isEqualTo: idRooms)
-        .snapshots();
-  }*/
 
   static Future<void> updateUserInfo(ChatUser me) async {
     await firestore
@@ -254,6 +240,23 @@ class APIs {
         sendPushNotification(chatUser, type == Type.text ? msg : 'Фотография'));
   }
 
+  static Future<void> sendFirstMessage(
+      ChatUser chatUser, String msg, Type type) async {
+    await firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('my_users')
+        .doc(chatUser.id)
+        .set({}).then((value) async{
+      firestore
+          .collection('users')
+          .doc(chatUser.id)
+          .collection('my_users')
+          .doc(user.uid)
+          .set({}).then((value) => sendMessage(chatUser, msg, type));
+    });
+  }
+
   static Future<void> updateMessageReadStatus(Message message) async {
     firestore
         .collection('chats/${getConversationID(message.fromId)}/messages/')
@@ -279,13 +282,38 @@ class APIs {
     await sendMessage(chatUser, imageUrl, Type.image);
   }
 
+  static Future<void> deleteMessage(Message message) async {
+    await firestore
+        .collection('chats/${getConversationID(message.toId)}/messages/')
+        .doc(message.time)
+        .delete();
+
+    if (message.type == Type.image) {
+      await storage.refFromURL(message.message).delete();
+    }
+  }
+
+  static Future<void> updateMessage(Message message, String updateMsg) async {
+    await firestore
+        .collection('chats/${getConversationID(message.toId)}/messages/')
+        .doc(message.time)
+        .update({'message': updateMsg});
+  }
 //------------------------LOCATION--------------------------------
+
+  static double getDistance(Map<String, dynamic> data) {
+    var otherPoint = geopointFrom(data);
+    var myGeoPoint = geopointFrom(meInfo.location);
+    GeoFirePoint meLocation = geo.point(latitude: myGeoPoint.latitude,
+        longitude: myGeoPoint.longitude);
+    return meLocation.distance(lat: otherPoint.latitude, lng: otherPoint.longitude) * 1000;
+  }
 
   static Future<void> updateLocation() async {
     await determinePosition().then((value) => firestore
         .collection('users')
         .doc(user.uid)
-        .update({'location': value.toString()}));
+        .update({'location': value.data}));
   }
 
   static (double?, double?) getLocation(String loc) {
@@ -303,46 +331,25 @@ class APIs {
     return (latitude, longitude);
   }
 
-  static double getDistance(String loc) {
-    var endLatitude = getLocation(loc).$1;
-    var endLongitude = getLocation(loc).$2;
+  static GeoPoint geopointFrom(Map<String, dynamic> data) =>
+      data['geopoint'] as GeoPoint;
 
-    var startLatitude = getLocation(meInfo.location).$1;
-    var startLongitude = getLocation(meInfo.location).$2;
+  static Stream<List<DocumentSnapshot>> getNearUser() {
+    var currLocation = geopointFrom(meInfo.location);
 
-    if (startLatitude != null &&
-        startLongitude != null &&
-        endLatitude != null &&
-        endLongitude != null) {
-      return Geolocator.distanceBetween(
-          startLatitude, startLongitude, endLatitude, endLongitude);
-    }
-    return double.maxFinite;
+    GeoFirePoint center = geo.point(latitude: currLocation.latitude,
+        longitude: currLocation.longitude);
+
+    var collectionReference = firestore.collection('users');
+
+    double radius = 50;
+    String field = 'location';
+
+    return  geo.collection(collectionRef: collectionReference)
+        .within(center: center, radius: radius, field: field);
   }
 
-  static Future<List<ChatUser>> getNearUser(List<ChatUser> users) async {
-    /*List<ChatUser> nearly = [];
-    return nearlyArr = getAllUser().listen((event) {
-      event.docs.forEach((element) { 
-        nearly.add(ChatUser.fromJson(element.data()));
-      });
-      nearly.sort(
-        (a, b) => getDistance(a.location).compareTo(getDistance(b.location)));
-       nearly;
-    });*/
-    await updateLocation();
-    users.sort(
-        (a, b) => getDistance(a.location).compareTo(getDistance(b.location)));
-    return users;
-    /*nearlyArr.docs.forEach((element) {
-      nearly.add(ChatUser.fromJson(element.data()));
-    });*/
-
-    //for (var user in nearly) {}
-    //var nearly = users.sort((a,b) => )
-  }
-
-  static Future<Position> determinePosition() async {
+  static Future<GeoFirePoint> determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -374,17 +381,8 @@ class APIs {
           'Location permissions are permanently denied, we cannot request permissions.');
     }
 
-    return await Geolocator.getCurrentPosition(); //.then((value) => );
+    return await Geolocator.getCurrentPosition().then((value) =>
+        geo.point(latitude: value.latitude,  longitude: value.longitude) );
   }
 
-  static Future<void> deleteMessage(Message message) async {
-    await firestore
-        .collection('chats/${getConversationID(message.toId)}/messages/')
-        .doc(message.time)
-        .delete();
-
-    if (message.type == Type.image) {
-      await storage.refFromURL(message.message).delete();
-    }
-  }
 }

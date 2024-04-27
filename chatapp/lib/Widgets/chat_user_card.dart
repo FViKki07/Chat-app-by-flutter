@@ -44,9 +44,6 @@ class _ChatUserCardState extends State<ChatUserCard> {
               _message = _list.first;
             }
 
-            print(APIs.getDistance(widget.user.location).toStringAsFixed(3));
-            print(APIs.getDistance(widget.user.location));
-            print(double.maxFinite);
             return ListTile(
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(mq.height * .03),
@@ -68,11 +65,6 @@ class _ChatUserCardState extends State<ChatUserCard> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(widget.user.name),
-                    (APIs.getDistance(widget.user.location) != double.maxFinite)
-                        ? Text(
-                            " В ${APIs.getDistance(widget.user.location).toStringAsFixed(3)} метрах от вас")
-                        : Text(
-                            "Далеко от вас") //местоположение не обновляется!!
                   ]),
 
               subtitle: Text(

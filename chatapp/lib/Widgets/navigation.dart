@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:geolocator/geolocator.dart';
 import '../helper/message.dart';
 
@@ -51,9 +52,17 @@ Widget buildMenuItems(BuildContext context) => Column(
           leading: const Icon(Icons.location_searching),
           title: const Text('Найти местоположение'),
           onTap: () async {
-            Position myPosition = await APIs.determinePosition();
+            GeoFirePoint  myPosition = await APIs.determinePosition();
             print(
-                'My position: ${APIs.getLocation(myPosition.toString()).toString()}');
+                'My position: ${myPosition.data}');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.location_searching),
+          title: const Text('Найти людей рядом'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.pushNamed(context, "/nearUser");
           },
         ),
         const Divider(
@@ -73,6 +82,7 @@ Widget buildMenuItems(BuildContext context) => Column(
 
             showToast(message: "Вы успешно вышли из аккаунта");
           },
-        )
+        ),
+
       ],
     );

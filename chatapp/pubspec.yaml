@@ -48,8 +48,8 @@ dependencies:
   url_launcher_android: 6.0.27
   url_launcher_ios: 6.1.4
   url_launcher_platform_interface: 2.1.2
-  cloud_firestore: ^3.1.6
-  firebase_core: ^1.10.2
+  cloud_firestore: ^4.17.0
+  firebase_core: ^2.30.0
   fluttertoast: ^8.2.4
   firebase_app_check:
   # The following adds the Cupertino Icons font to your application.
@@ -64,20 +64,12 @@ dependencies:
   geolocator: ^11.0.0
   geocoding: ^3.0.0
   
-  firebase_messaging: ^14.7.20
-  firebase_storage: ^11.6.0
-  firebase_auth: ^4.16.0
+  firebase_messaging: ^14.8.2
+  firebase_storage: ^11.7.2
+  firebase_auth: ^4.19.2
+  #geoflutterfire_plus: ^0.0.21
+  geoflutterfire2: ^2.3.15
 
-  flutter_lints: ^1.0.0
-  geoflutterfire: ^3.0.3
-
-dependancy_overrides:
-  cloud_firestore: ^4.14.0
-  flutter_lints: ^2.0.0
-  firebase_core: ^2.25.5
-  firebase_messaging: ^14.7.20
-  firebase_storage: ^11.6.0
-  firebase_auth: ^4.16.0
 
 dev_dependencies:
   flutter_test:
@@ -89,6 +81,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
+  flutter_lints: ^2.0.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

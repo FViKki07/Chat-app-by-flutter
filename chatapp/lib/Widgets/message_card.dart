@@ -198,7 +198,10 @@ class _MessageCardState extends State<MessageCard> {
                 _OptionItem(
                     icon: const Icon(Icons.edit, color: Colors.blue, size: 26),
                     name: "Редактировать",
-                    onTap: () {}),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showMessageUpdateDialog();
+                    }),
               if (isMe)
                 _OptionItem(
                     icon: const Icon(Icons.delete, color: Colors.red, size: 26),
@@ -223,6 +226,65 @@ class _MessageCardState extends State<MessageCard> {
             ],
           );
         });
+  }
+
+  void _showMessageUpdateDialog() {
+    String updatedMsg = widget.message.message;
+
+    showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          contentPadding: const EdgeInsets.only(
+              left: 24, right: 24, top: 20, bottom: 10),
+
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
+
+          //title
+          title: const Row(
+            children: [
+              Icon(
+                Icons.message,
+                color: Colors.blue,
+                size: 28,
+              ),
+              Text(' Изменить сообщение')
+            ],
+          ),
+
+          //content
+          content: TextFormField(
+            initialValue: updatedMsg,
+            maxLines: null,
+            onChanged: (value) => updatedMsg = value,
+            decoration: InputDecoration(
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15))),
+          ),
+
+
+          actions: [
+            MaterialButton(
+                onPressed: () {
+                  Navigator.of(context, rootNavigator: true).pop();
+                },
+                child: const Text(
+                  'Закрыть',
+                  style: TextStyle(color: Colors.blue, fontSize: 16),
+                )),
+
+
+            MaterialButton(
+                onPressed: () {
+                  Navigator.of(context, rootNavigator: true).pop();
+                  APIs.updateMessage(widget.message, updatedMsg);
+                },
+                child: const Text(
+                  'Изменить',
+                  style: TextStyle(color: Colors.blue, fontSize: 16),
+                ))
+          ],
+        ));
   }
 }
 

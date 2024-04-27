@@ -3,8 +3,6 @@ import 'dart:developer';
 
 import 'package:chatapp/Widgets/chat_user_card.dart';
 import 'package:chatapp/api/apis.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/Widgets/navigation.dart';
@@ -22,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   //List<Room> _list_rooms = [];
   List<ChatUser> _list_users = [];
   List<ChatUser> _list_search = [];
@@ -33,15 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     APIs.getSelfInfo();
     APIs.updateLocation();
-    //APIs.getNearUser().then((element) =>
-    //  element.forEach((value) => print(value.name + value.email)));
-
-    /* getUsers().then((List<ChatUser> fetchedUsers) {
-      setState(() {
-        _list_users = fetchedUsers;
-      });
-      for (var i in fetchedUsers) print(i.name);
-    });*/
 
     SystemChannels.lifecycle.setMessageHandler((message) {
       print('Message ${message}');
@@ -135,39 +125,51 @@ class _HomeScreenState extends State<HomeScreen> {
 
             //floatingActionButton: Padding(),
             body: StreamBuilder(
-                stream: APIs.getAllUser(), //APIs.getAllUser(),
+                stream: APIs.getMyUsersId(),
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
-                    //return Center(child: CircularProgressIndicator());
                     case ConnectionState.none:
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     case ConnectionState.active:
                     case ConnectionState.done:
-                      final data = snapshot.data?.docs;
-                      _list_users = data
-                              ?.map((e) => ChatUser.fromJson(e.data()))
-                              .toList() ??
-                          [];
+                      return StreamBuilder(
+                          stream: APIs.getAllUsers(
+                              snapshot.data?.docs.map((e) => e.id).toList() ?? []
+                          ),
+                          builder: (context, snapshot) {
+                            switch (snapshot.connectionState) {
+                              case ConnectionState.waiting:
+                              case ConnectionState.none:
+                              case ConnectionState.active:
+                              case ConnectionState.done:
+                                final data = snapshot.data?.docs;
+                                _list_users = data
+                                        ?.map(
+                                            (e) => ChatUser.fromJson(e.data()))
+                                        .toList() ??
+                                    [];
 
-                      //_list_users = snapshot.data ?? [];
-                      if (_list_users.isNotEmpty) {
-                        return ListView.builder(
-                            itemCount: _isSearching
-                                ? _list_search.length
-                                : _list_users.length,
-                            physics: BouncingScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              return ChatUserCard(
-                                  user: _isSearching
-                                      ? _list_search[index]
-                                      : _list_users[index]);
-                            });
-                      } else {
-                        return const Center(
-                            child: Text('Чатов нет',
-                                style: TextStyle(fontSize: 20)));
-                      }
+                                //_list_users = snapshot.data ?? [];
+                                if (_list_users.isNotEmpty) {
+                                  return ListView.builder(
+                                      itemCount: _isSearching
+                                          ? _list_search.length
+                                          : _list_users.length,
+                                      physics: BouncingScrollPhysics(),
+                                      itemBuilder: (context, index) {
+                                        return ChatUserCard(
+                                            user: _isSearching
+                                                ? _list_search[index]
+                                                : _list_users[index]);
+                                      });
+                                } else {
+                                  return const Center(
+                                      child: Text('Чатов нет',
+                                          style: TextStyle(fontSize: 20)));
+                                }
+                            }
+                          });
                   }
                 })),
       ),

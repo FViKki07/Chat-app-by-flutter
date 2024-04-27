@@ -22,7 +22,7 @@ class ChatUser {
   late String id;
   late String pushToken;
   late String email;
-  late String location;
+  late Map<String, dynamic> location;
 
   ChatUser.fromJson(Map<String, dynamic> json) {
     roomId = List.castFrom<dynamic, String>(json['roomId']);
@@ -35,11 +35,11 @@ class ChatUser {
     id = json['id'] ?? '';
     pushToken = json['push_token'] ?? '';
     email = json['email'] ?? '';
-    location = json['location'] ?? '';
+    location = json['location'] ?? {};
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = Map<String, dynamic>();
     data['roomId'] = roomId;
     data['image'] = image;
     data['name'] = name;

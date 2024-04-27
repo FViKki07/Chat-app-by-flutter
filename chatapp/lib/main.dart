@@ -1,6 +1,7 @@
 
 import 'package:chatapp/Screen/home_screen.dart';
 import 'package:chatapp/Screen/login_screen.dart';
+import 'package:chatapp/Screen/near_user.dart';
 import 'package:chatapp/Screen/profile_screen.dart';
 import 'package:chatapp/Screen/sign_upScreen.dart';
 import 'package:chatapp/Screen/splash_screen.dart';
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         '/signUp': (context) => SignUpScreen(),
         '/home': (context) => HomeScreen(),
         '/user': (context) => ProfileScreen(),
+        '/nearUser': (context) => NearUser()
       },/*
       home: SplashScreen(
         child: LoginScreen(),
