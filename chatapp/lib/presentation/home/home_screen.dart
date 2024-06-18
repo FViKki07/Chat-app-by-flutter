@@ -1,15 +1,13 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:chatapp/Widgets/chat_user_card.dart';
-import 'package:chatapp/api/apis.dart';
+import 'package:chatapp/presentation/Widgets/chat_user_card.dart';
+import 'package:chatapp/data/repositories/apis.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:chatapp/Widgets/navigation.dart';
+import 'package:chatapp/presentation/Widgets/navigation.dart';
 import 'package:flutter/services.dart';
-
-import '../Models/chatuser.dart';
-import '../Models/room.dart';
+import '../../data/Models/chatuser.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,17 +29,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     APIs.getSelfInfo();
-    APIs.updateLocation();
+    //APIs.updateLocation();
 
     SystemChannels.lifecycle.setMessageHandler((message) {
       print('Message ${message}');
 
-      if (APIs.getAuthUser() != null) {
-        if (message.toString().contains('resume'))
-          APIs.updateActiveStatus(true);
-        if (message.toString().contains('paused'))
-          APIs.updateActiveStatus(false);
-      }
+      // if (APIs.getAuthUser() != null) {
+      if (message.toString().contains('resume')) APIs.updateActiveStatus(true);
+      if (message.toString().contains('paused')) APIs.updateActiveStatus(false);
+      //}
 
       if (message.toString().contains('detached'))
         APIs.updateActiveStatus(false); //не работает полный выход из системы
@@ -72,7 +68,16 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Scaffold(
             key: _scaffoldKey,
             appBar: AppBar(
-              backgroundColor: Colors.blueAccent,
+              flexibleSpace: Container(
+                  decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.topRight,
+                    colors: [
+                      Color(0xffffa268),
+                      Color(0xff0947B1),
+                    ]),
+              )),
               title: _isSearching
                   ? TextField(
                       decoration: const InputDecoration(
@@ -97,9 +102,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         }
                       },
                     )
-                  : Text("Чаты"),
+                  : Text(
+                      "Чаты",
+                      style: TextStyle(color: Colors.white),
+                    ),
               actions: [
                 IconButton(
+                  color: Colors.white,
                   onPressed: () {
                     setState(() {
                       _isSearching = !_isSearching;
@@ -110,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       : Icons.search),
                 ),
                 IconButton(
+                  color: Colors.white,
                   onPressed: () {
                     setState(() {
                       _isSearching = false;
@@ -135,8 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     case ConnectionState.done:
                       return StreamBuilder(
                           stream: APIs.getAllUsers(
-                              snapshot.data?.docs.map((e) => e.id).toList() ?? []
-                          ),
+                              snapshot.data?.docs.map((e) => e.id).toList() ??
+                                  []),
                           builder: (context, snapshot) {
                             switch (snapshot.connectionState) {
                               case ConnectionState.waiting:
@@ -152,21 +162,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                 //_list_users = snapshot.data ?? [];
                                 if (_list_users.isNotEmpty) {
-                                  return ListView.builder(
-                                      itemCount: _isSearching
-                                          ? _list_search.length
-                                          : _list_users.length,
-                                      physics: BouncingScrollPhysics(),
-                                      itemBuilder: (context, index) {
-                                        return ChatUserCard(
-                                            user: _isSearching
-                                                ? _list_search[index]
-                                                : _list_users[index]);
-                                      });
+                                  return Container(
+                                      decoration: const BoxDecoration(
+                                        image: DecorationImage(
+                                            image:
+                                                AssetImage('images/back.jpg'),
+                                            fit: BoxFit.cover),
+                                      ),
+                                      child: ListView.builder(
+                                          itemCount: _isSearching
+                                              ? _list_search.length
+                                              : _list_users.length,
+                                          physics: BouncingScrollPhysics(),
+                                          itemBuilder: (context, index) {
+                                            return ChatUserCard(
+                                                user: _isSearching
+                                                    ? _list_search[index]
+                                                    : _list_users[index]);
+                                          }));
                                 } else {
-                                  return const Center(
-                                      child: Text('Чатов нет',
-                                          style: TextStyle(fontSize: 20)));
+                                  return Container(
+                                      decoration: const BoxDecoration(
+                                        image: DecorationImage(
+                                          image: AssetImage('images/back.jpg'),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      child: const Center(
+                                          child: Text('Чатов нет',
+                                              style: TextStyle(fontSize: 20))));
                                 }
                             }
                           });
@@ -175,4 +199,30 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
+
+showAlertDialog(BuildContext context) {
+  // set up the button
+  Widget okButton = TextButton(
+    child: Text("OK"),
+    onPressed: () {},
+  );
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Упс"),
+    content: Text(
+        "Чтобы пользоваться приложением, необходимо установить разрешение в настройках телефона."),
+    actions: [
+      okButton,
+    ],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
 }

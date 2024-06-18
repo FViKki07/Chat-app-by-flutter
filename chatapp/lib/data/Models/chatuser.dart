@@ -1,7 +1,6 @@
 class ChatUser {
   ChatUser(
-      {required this.roomId,
-      required this.image,
+      {required this.image,
       required this.name,
       required this.about,
       required this.createdAt,
@@ -12,7 +11,6 @@ class ChatUser {
       required this.email,
       required this.location});
 
-  late List<String> roomId;
   late String image;
   late String name;
   late String about;
@@ -25,7 +23,6 @@ class ChatUser {
   late Map<String, dynamic> location;
 
   ChatUser.fromJson(Map<String, dynamic> json) {
-    roomId = List.castFrom<dynamic, String>(json['roomId']);
     image = json['image'] ?? '';
     name = json['name'] ?? '';
     about = json['about'] ?? '';
@@ -40,7 +37,6 @@ class ChatUser {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = Map<String, dynamic>();
-    data['roomId'] = roomId;
     data['image'] = image;
     data['name'] = name;
     data['about'] = about;

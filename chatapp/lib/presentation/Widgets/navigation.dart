@@ -1,11 +1,11 @@
-import 'package:chatapp/api/apis.dart';
+import 'package:chatapp/data/repositories/apis.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geoflutterfire2/geoflutterfire2.dart';
 import 'package:geolocator/geolocator.dart';
-import '../helper/message.dart';
+import '../../helper/message.dart';
 
 class NavigationDrawerWidget extends StatelessWidget {
   const NavigationDrawerWidget({Key? key}) : super(key: key);
@@ -33,7 +33,7 @@ Widget buildHeader(BuildContext context) => Container(
 Widget buildMenuItems(BuildContext context) => Column(
       children: [
         ListTile(
-          leading: const Icon(Icons.chat),
+          leading: const Icon(Icons.chat, color: Color(0xffffa268)),
           title: const Text('Чаты'),
           onTap: () {
             Navigator.pushNamedAndRemoveUntil(
@@ -41,24 +41,24 @@ Widget buildMenuItems(BuildContext context) => Column(
           },
         ),
         ListTile(
-          leading: const Icon(Icons.person),
+          leading: const Icon(Icons.person, color: Color(0xffffa268)),
           title: const Text('Профиль'),
           onTap: () {
             Navigator.pop(context);
             Navigator.pushNamed(context, "/user");
           },
         ),
-        ListTile(
+        /*ListTile(
           leading: const Icon(Icons.location_searching),
           title: const Text('Найти местоположение'),
           onTap: () async {
-            GeoFirePoint  myPosition = await APIs.determinePosition();
-            print(
-                'My position: ${myPosition.data}');
+            GeoFirePoint myPosition = await APIs.determinePosition();
+            print('My position: ${myPosition.data}');
           },
-        ),
+        ),*/
         ListTile(
-          leading: const Icon(Icons.location_searching),
+          leading:
+              const Icon(Icons.location_searching, color: Color(0xffffa268)),
           title: const Text('Найти людей рядом'),
           onTap: () {
             Navigator.pop(context);
@@ -69,7 +69,7 @@ Widget buildMenuItems(BuildContext context) => Column(
           color: Colors.black,
         ),
         ListTile(
-          leading: const Icon(Icons.output),
+          leading: const Icon(Icons.output, color: Color(0xffffa268)),
           title: const Text('Выйти'),
           onTap: () async {
             Navigator.pushNamedAndRemoveUntil(
@@ -83,6 +83,5 @@ Widget buildMenuItems(BuildContext context) => Column(
             showToast(message: "Вы успешно вышли из аккаунта");
           },
         ),
-
       ],
     );

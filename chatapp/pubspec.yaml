@@ -64,11 +64,20 @@ dependencies:
   geolocator: ^11.0.0
   geocoding: ^3.0.0
   
+  #flutter_bloc: ^8.1.5
+  #equatable: ^2.0.5
+  
   firebase_messaging: ^14.8.2
   firebase_storage: ^11.7.2
   firebase_auth: ^4.19.2
+
+  #flutter_background_geolocation: ^4.15.2
   #geoflutterfire_plus: ^0.0.21
   geoflutterfire2: ^2.3.15
+  equatable: ^2.0.5
+  flutter_bloc: ^8.1.5
+  flutter_background_geolocation: ^4.15.2
+  permission_handler: ^10.4.0
 
 
 dev_dependencies:

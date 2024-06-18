@@ -1,19 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:chatapp/Models/chatuser.dart';
-import 'package:chatapp/Models/message.dart';
-import 'package:chatapp/Widgets/chat_user_card.dart';
+import 'package:chatapp/data/Models/chatuser.dart';
+import 'package:chatapp/data/Models/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:geoflutterfire2/geoflutterfire2.dart';
-
-import '../Models/room.dart';
 
 class APIs {
   static FirebaseAuth auth = FirebaseAuth.instance;
@@ -28,9 +24,9 @@ class APIs {
 
   static final geo = GeoFlutterFire();
 
-  static User? getAuthUser() {
-    return auth.currentUser;
-  }
+  //static User? getAuthUser() {
+  //return auth.currentUser;
+  // }
 
   static late ChatUser meInfo;
 
@@ -117,7 +113,6 @@ class APIs {
     final time = DateTime.now().microsecondsSinceEpoch.toString();
 
     final chatUser = ChatUser(
-        roomId: [],
         image: '',
         name: nameFromField,
         about: 'about',
@@ -144,15 +139,12 @@ class APIs {
 
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUsers(
       List<String> userIds) {
-
     return firestore
         .collection('users')
-        .where('id',
-        whereIn: userIds.isEmpty
-            ? ['']
-            : userIds)
+        .where('id', whereIn: userIds.isEmpty ? [''] : userIds)
         .snapshots();
   }
+
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUser() {
     return firestore
         .collection('users')
@@ -247,7 +239,7 @@ class APIs {
         .doc(user.uid)
         .collection('my_users')
         .doc(chatUser.id)
-        .set({}).then((value) async{
+        .set({}).then((value) async {
       firestore
           .collection('users')
           .doc(chatUser.id)
@@ -255,6 +247,13 @@ class APIs {
           .doc(user.uid)
           .set({}).then((value) => sendMessage(chatUser, msg, type));
     });
+
+    await firestore
+        .collection('users')
+        .doc(chatUser.id)
+        .collection('my_users')
+        .doc(user.uid)
+        .set({});
   }
 
   static Future<void> updateMessageReadStatus(Message message) async {
@@ -304,16 +303,18 @@ class APIs {
   static double getDistance(Map<String, dynamic> data) {
     var otherPoint = geopointFrom(data);
     var myGeoPoint = geopointFrom(meInfo.location);
-    GeoFirePoint meLocation = geo.point(latitude: myGeoPoint.latitude,
-        longitude: myGeoPoint.longitude);
-    return meLocation.distance(lat: otherPoint.latitude, lng: otherPoint.longitude) * 1000;
+    GeoFirePoint meLocation = geo.point(
+        latitude: myGeoPoint.latitude, longitude: myGeoPoint.longitude);
+    return meLocation.distance(
+            lat: otherPoint.latitude, lng: otherPoint.longitude) *
+        1000;
   }
 
-  static Future<void> updateLocation() async {
-    await determinePosition().then((value) => firestore
+  static Future<void> updateLocation(GeoFirePoint location) async {
+    await firestore
         .collection('users')
         .doc(user.uid)
-        .update({'location': value.data}));
+        .update({'location': location.data});
   }
 
   static (double?, double?) getLocation(String loc) {
@@ -337,15 +338,16 @@ class APIs {
   static Stream<List<DocumentSnapshot>> getNearUser() {
     var currLocation = geopointFrom(meInfo.location);
 
-    GeoFirePoint center = geo.point(latitude: currLocation.latitude,
-        longitude: currLocation.longitude);
+    GeoFirePoint center = geo.point(
+        latitude: currLocation.latitude, longitude: currLocation.longitude);
 
     var collectionReference = firestore.collection('users');
 
-    double radius = 50;
+    double radius = 1000;
     String field = 'location';
 
-    return  geo.collection(collectionRef: collectionReference)
+    return geo
+        .collection(collectionRef: collectionReference)
         .within(center: center, radius: radius, field: field);
   }
 
@@ -382,7 +384,6 @@ class APIs {
     }
 
     return await Geolocator.getCurrentPosition().then((value) =>
-        geo.point(latitude: value.latitude,  longitude: value.longitude) );
+        geo.point(latitude: value.latitude, longitude: value.longitude));
   }
-
 }

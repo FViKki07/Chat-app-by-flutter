@@ -1,15 +1,15 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chatapp/api/apis.dart';
+import 'package:chatapp/data/repositories/apis.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../Models/chatuser.dart';
+import '../../data/Models/chatuser.dart';
 import '../Widgets/navigation.dart';
-import '../main.dart';
-import '../helper/message.dart';
+import '../../main.dart';
+import '../../helper/message.dart';
 
 class ProfileScreen extends StatefulWidget {
 //
@@ -37,8 +37,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
-        title: Text("Профиль"),
+        flexibleSpace: Container(
+            decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+              colors: [
+                Color(0xffffa268),
+                Color(0xff0947B1),
+              ]),
+        )),
+        title: const Text(
+          "Профиль",
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: <Widget>[
+          Builder(
+            builder: (context) {
+              return IconButton(
+                color: Colors.white,
+                icon: Icon(Icons.menu),
+                onPressed: () {
+                  Scaffold.of(context).openEndDrawer();
+                },
+              );
+            },
+          )
+        ],
       ),
       endDrawer: const NavigationDrawerWidget(),
       body: GestureDetector(

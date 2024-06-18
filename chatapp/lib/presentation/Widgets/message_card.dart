@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chatapp/Models/message.dart';
-import 'package:chatapp/api/apis.dart';
+import 'package:chatapp/data/Models/message.dart';
+import 'package:chatapp/data/repositories/apis.dart';
 import 'package:chatapp/helper/conver_date.dart';
 import 'package:chatapp/helper/message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart';
+import '../../main.dart';
 
 class MessageCard extends StatefulWidget {
   const MessageCard({super.key, required this.message});
@@ -234,57 +234,54 @@ class _MessageCardState extends State<MessageCard> {
     showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          contentPadding: const EdgeInsets.only(
-              left: 24, right: 24, top: 20, bottom: 10),
+              contentPadding: const EdgeInsets.only(
+                  left: 24, right: 24, top: 20, bottom: 10),
 
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
 
-          //title
-          title: const Row(
-            children: [
-              Icon(
-                Icons.message,
-                color: Colors.blue,
-                size: 28,
+              //title
+              title: const Row(
+                children: [
+                  Icon(
+                    Icons.message,
+                    color: Colors.blue,
+                    size: 28,
+                  ),
+                  Text(' Изменить сообщение')
+                ],
               ),
-              Text(' Изменить сообщение')
-            ],
-          ),
 
-          //content
-          content: TextFormField(
-            initialValue: updatedMsg,
-            maxLines: null,
-            onChanged: (value) => updatedMsg = value,
-            decoration: InputDecoration(
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15))),
-          ),
+              //content
+              content: TextFormField(
+                initialValue: updatedMsg,
+                maxLines: null,
+                onChanged: (value) => updatedMsg = value,
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15))),
+              ),
 
-
-          actions: [
-            MaterialButton(
-                onPressed: () {
-                  Navigator.of(context, rootNavigator: true).pop();
-                },
-                child: const Text(
-                  'Закрыть',
-                  style: TextStyle(color: Colors.blue, fontSize: 16),
-                )),
-
-
-            MaterialButton(
-                onPressed: () {
-                  Navigator.of(context, rootNavigator: true).pop();
-                  APIs.updateMessage(widget.message, updatedMsg);
-                },
-                child: const Text(
-                  'Изменить',
-                  style: TextStyle(color: Colors.blue, fontSize: 16),
-                ))
-          ],
-        ));
+              actions: [
+                MaterialButton(
+                    onPressed: () {
+                      Navigator.of(context, rootNavigator: true).pop();
+                    },
+                    child: const Text(
+                      'Закрыть',
+                      style: TextStyle(color: Colors.blue, fontSize: 16),
+                    )),
+                MaterialButton(
+                    onPressed: () {
+                      Navigator.of(context, rootNavigator: true).pop();
+                      APIs.updateMessage(widget.message, updatedMsg);
+                    },
+                    child: const Text(
+                      'Изменить',
+                      style: TextStyle(color: Colors.blue, fontSize: 16),
+                    ))
+              ],
+            ));
   }
 }
 

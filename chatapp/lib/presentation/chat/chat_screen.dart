@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chatapp/Screen/view_profile_screen.dart';
+import 'package:chatapp/presentation/profile/view_profile_screen.dart';
 import 'package:chatapp/helper/conver_date.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,11 +10,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../Models/chatuser.dart';
-import '../Models/message.dart';
+import '../../data/Models/chatuser.dart';
+import '../../data/Models/message.dart';
 import '../Widgets/message_card.dart';
-import '../api/apis.dart';
-import '../main.dart';
+import '../../data/repositories/apis.dart';
+import '../../main.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatUser user;
@@ -61,7 +61,6 @@ class _ChatScreenState extends State<ChatScreen> {
         },
         child: Scaffold(
             appBar: AppBar(
-              backgroundColor: Colors.blueAccent,
               //elevation: 2,
               automaticallyImplyLeading: false,
               flexibleSpace: _appBar(),
@@ -138,75 +137,88 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _appBar() {
-    return SafeArea(
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => ViewProfileScreen(user: widget.user)));
-        },
-        child: StreamBuilder(
-            stream: APIs.getUserInfo(widget.user),
-            builder: (context, snapshot) {
-              final data = snapshot.data?.docs;
-              final list =
-                  data?.map((e) => ChatUser.fromJson(e.data())).toList() ?? [];
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.topRight,
+            colors: [
+              Color(0xffffa268),
+              Color(0xff0947B1),
+            ]),
+      ),
+      child: SafeArea(
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => ViewProfileScreen(user: widget.user)));
+          },
+          child: StreamBuilder(
+              stream: APIs.getUserInfo(widget.user),
+              builder: (context, snapshot) {
+                final data = snapshot.data?.docs;
+                final list =
+                    data?.map((e) => ChatUser.fromJson(e.data())).toList() ??
+                        [];
 
-              return Row(
-                children: [
-                  SizedBox(
-                    height: mq.height * .2,
-                  ),
-                  IconButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      icon: Icon(Icons.arrow_back, color: Colors.black54)),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(mq.height * .03),
-                    child: widget.user.image.isEmpty
-                        ? const CircleAvatar(child: Icon(CupertinoIcons.person))
-                        : CachedNetworkImage(
-                            width: mq.height * .05,
-                            height: mq.height * .05,
-                            imageUrl: widget.user.image,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) =>
-                                const CircleAvatar(
-                                    child: Icon(CupertinoIcons.person))),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.user.name,
-                          style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500)),
-                      Text(
-                          list.isNotEmpty
-                              ? list[0].isOnline
-                                  ? 'Онлайн'
-                                  : ConvertDate.getLastActiveTime(
-                                      context: context,
-                                      lastActive: list[0].lastActive)
-                              : ConvertDate.getLastActiveTime(
-                                  context: context,
-                                  lastActive: widget.user.lastActive),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
-                          ))
-                    ],
-                  )
-                ],
-              );
-            }),
+                return Row(
+                  children: [
+                    SizedBox(
+                      height: mq.height * .2,
+                    ),
+                    IconButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        icon: Icon(Icons.arrow_back, color: Colors.black54)),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(mq.height * .03),
+                      child: widget.user.image.isEmpty
+                          ? const CircleAvatar(
+                              child: Icon(CupertinoIcons.person))
+                          : CachedNetworkImage(
+                              width: mq.height * .05,
+                              height: mq.height * .05,
+                              imageUrl: widget.user.image,
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) =>
+                                  const CircleAvatar(
+                                      child: Icon(CupertinoIcons.person))),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(widget.user.name,
+                            style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w500)),
+                        Text(
+                            list.isNotEmpty
+                                ? list[0].isOnline
+                                    ? 'Онлайн'
+                                    : ConvertDate.getLastActiveTime(
+                                        context: context,
+                                        lastActive: list[0].lastActive)
+                                : ConvertDate.getLastActiveTime(
+                                    context: context,
+                                    lastActive: widget.user.lastActive),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black54,
+                            ))
+                      ],
+                    )
+                  ],
+                );
+              }),
+        ),
       ),
     );
   }
@@ -287,9 +299,9 @@ class _ChatScreenState extends State<ChatScreen> {
           MaterialButton(
             onPressed: () {
               if (_textContoller.text.isNotEmpty) {
-                if(_list.isEmpty) {
-                  APIs.sendFirstMessage(widget.user, _textContoller.text, Type.text);
-
+                if (_list.isEmpty) {
+                  APIs.sendFirstMessage(
+                      widget.user, _textContoller.text, Type.text);
                 } else {
                   APIs.sendMessage(widget.user, _textContoller.text, Type.text);
                 }

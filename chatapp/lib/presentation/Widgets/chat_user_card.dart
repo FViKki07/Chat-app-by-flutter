@@ -1,13 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chatapp/Models/chatuser.dart';
-import 'package:chatapp/api/apis.dart';
+import 'package:chatapp/data/Models/chatuser.dart';
+import 'package:chatapp/data/repositories/apis.dart';
 import 'package:chatapp/helper/conver_date.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../Models/message.dart';
-import '../Screen/chat_screen.dart';
-import '../main.dart';
+import '../../data/Models/message.dart';
+import '../chat/chat_screen.dart';
+import '../../main.dart';
 
 class ChatUserCard extends StatefulWidget {
   final ChatUser user;
@@ -84,7 +84,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                           width: 15,
                           height: 15,
                           decoration: BoxDecoration(
-                              color: Colors.greenAccent.shade200,
+                              color: Color(0xff0947B1),
                               borderRadius: BorderRadius.circular(10)),
                         )
                       : Text(
